@@ -1,0 +1,123 @@
+stages:
+  - zip_and_upload
+  - test
+  - web_page_deploy
+
+default:
+  image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
+
+variables:
+  S3_BUCKET_NAME: "python-scripts-funcs"
+
+.zip_and_upload: &zip_and_upload
+  stage: zip_and_upload
+  script:
+    - cd $FUNCTION_NAME
+    - zip $FUNCTION_NAME.zip lambda_function.py
+    - echo "file zipped"
+    - aws s3 cp $FUNCTION_NAME.zip s3://$S3_BUCKET_NAME/
+    - echo "zip uploaded"
+    - aws lambda update-function-code --function-name $FUNCTION_NAME --s3-bucket $S3_BUCKET_NAME --s3-key $FUNCTION_NAME.zip
+    - echo "lambda updated"
+
+create_user_lambda_job:
+  <<: *zip_and_upload
+  variables:
+    FUNCTION_NAME: "create_gitlab_user"
+  only:
+    changes:
+      - create_gitlab_user/lambda_function.py
+
+csv_to_excel_lambda_job:
+  <<: *zip_and_upload
+  variables:
+    FUNCTION_NAME: "csv_to_xlsx"
+  only:
+    changes:
+      - csv_to_xlsx/lambda_function.py
+
+discord_message_lambda_job:
+  <<: *zip_and_upload
+  variables:
+    FUNCTION_NAME: "discord_notification"
+  only:
+    changes:
+      - discord_notification/lambda_function.py
+
+new_project_lambda_job:
+  <<: *zip_and_upload
+  variables:
+    FUNCTION_NAME: "new_project" 
+  only:
+    changes:
+      - new_project/lambda_function.py
+
+wiki_info_lambda_job:
+  <<: *zip_and_upload
+  variables:
+    FUNCTION_NAME: "get_info"
+  only:
+    changes:
+      - get_info/lambda_function.py
+
+test_create_user_lambda_job:
+  stage: test
+  script:
+    - cd create_gitlab_user
+    - chmod +x test_create_gitlab_user.sh
+    - ./test_create_gitlab_user.sh
+  only:
+    changes:
+      - create_gitlab_user/lambda_function.py
+
+test_csv_to_excel_lambda_job:
+  stage: test
+  script:
+    - cd csv_to_xlsx
+    - chmod +x test_csv_to_xlsx.sh
+    - ./test_csv_to_xlsx.sh
+  only:
+    changes:
+      - csv_to_xlsx/lambda_function.py
+
+test_discord_message_lambda_job:
+  stage: test
+  script:
+    - cd discord_notification
+    - chmod +x test_discord_notification.sh
+    - ./test_discord_notification.sh
+  only:
+    changes:
+      - discord_notification/lambda_function.py
+
+test_new_project_lambda_job:
+  stage: test
+  script:
+    - cd new_project
+    - chmod +x test_new_project.sh
+    - ./test_new_project.sh
+  only:
+    changes:
+      - new_project/lambda_function.py
+
+test_wiki_tops_lambda_job:
+  stage: test
+  script:
+    - cd get_info
+    - chmod +x test_get_info.sh
+    - ./test_get_info.sh
+  only:
+    changes:
+      - get_info/lambda_function.py
+
+web_page_deploy:
+  stage: web_page_deploy
+  script:
+    - cd $DIRECTORY_NAME
+    - aws s3 cp $HTML_NAME s3://$S3_BUCKET_NAME/
+  variables:
+    DIRECTORY_NAME: "web_page"
+    HTML_NAME: "index.html"
+  only:
+    changes:
+      - web_page/*
