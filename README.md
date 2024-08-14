@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository contains a collection of AWS Lambda functions, each managed using GitLab CI for continuous integration and deployment. The project is structured to automate the testing, deployment, and updating of AWS Lambda functions, ensuring a streamlined and efficient CI/CD process.
+This repository contains a collection of AWS Lambda functions, each managed using GitLab CI for continuous integration and deployment. The project is structured to automate the testing, deployment, and updating of AWS Lambda functions, ensuring a streamlined and efficient CI/CD process. Additionally, you can host the index.html file in the webpage folder to trigger each function via a web interface.
 
 ## Features
 
@@ -30,17 +30,17 @@ This Lambda function is responsible for creating Gitlab users from a google spre
 
 This function is designed to create a new project in Gitlab. Given a project name and a file extension.
 
-### 3. **get_info**
+### 3. **discord_notification**
 
-This Lambda function retrives information from Wikipedia and downloads the information to your device.
+This function is used to send a discord message. 
 
 ### 4. **csv_to_xlsx**
 
 This function is used for converting CSV to XLSX(excel)
 
-### 5. **discord_notification**
+### 5. **get_info**
 
-This function is used to send a discord message. 
+This Lambda function retrives information from Wikipedia and downloads the information to your device.
 
 ## CI/CD Pipeline
 
@@ -69,7 +69,33 @@ Each Lambda function in this repository is equipped with a `.gitlab-ci.yml` file
    - Push changes to the repository and GitLab CI will automatically trigger the pipeline.
    - Monitor the pipeline progress via the GitLab CI/CD interface.
 
-## Usage
+## Setting Up the Web Interface
 
-- Host the `/web_page/index.html` on S3 or locally(ensure you can access AWS Services)
-- For each function get the given API gateway domain name and replace it in `index.html`
+To trigger each Lambda function via a web interface, you can host the `index.html` file located in the `webpage` folder. Here’s how to do it:
+
+- **Hosting on S3**:
+  1. Upload the `index.html` file to an S3 bucket.
+  2. Make the file publicly accessible.
+  3. Enable static website hosting on the S3 bucket.
+  4. Use the S3 bucket URL to access the web interface.
+
+- **Hosting Locally**:
+  1. Ensure your local environment can access AWS services.
+  2. Serve the `index.html` file using a simple HTTP server (e.g., Python's `http.server` module).
+  3. Open the file in your browser.
+
+After hosting the file, update the API Gateway domain names in the `index.html` file to point to the correct Lambda functions.
+
+## Environment Variables
+
+Some of the Lambda functions may require environment variables to function correctly. You can set these in the AWS Lambda console under the "Configuration" tab for each function.
+### 1. **create_gitlab_user** 
+- **`GITLAB_SERVER`**: IP of your Gitlab server
+- **`PRIVATE_TOKEN`**: Gitlab token
+
+### 2. **new_project**
+- **`GITLAB_SERVER`**: IP of your Gitlab server
+- **`PRIVATE_TOKEN`**: Gitlab token
+
+### 3. **discord_notification**
+- **`DISCORD_URL`**: Discord webhook URL
