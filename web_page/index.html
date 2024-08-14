@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lambda Functions</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .function-container {
+            background-color: #f0f0f0;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .function-container input[type="text"],
+        .function-container input[type="file"] {
+            margin-bottom: 10px;
+        }
+        .function-container button {
+            margin-bottom: 10px;
+        }
+        .error-message {
+            color: red;
+            margin-bottom: 10px;
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Lambda Functions</h1>
+    
+    <!-- csvToExcel -->
+    <div class="function-container">
+        <h2>Convert CSV to Excel</h2>
+        <div class="error-message" id="csvToExcelError"></div>
+        <input type="text" id="csvFileName" placeholder="File Name">
+        <input type="file" id="csvFileInput" onchange="handleFileSelect(event)">
+        <button onclick="csvToExcel()">Convert CSV to Excel</button>
+    </div>
+    
+    <!-- create_users -->
+    <div class="function-container">
+        <h2>Create Users</h2>
+        <div class="error-message" id="createUsersError"></div>
+        <input type="text" id="googleSheetUrl" placeholder="Google Sheet URL">
+        <button onclick="createUsers()">Create Users</button>
+    </div>
+    
+    <!-- discord -->
+    <div class="function-container">
+        <h2>Send Discord Message</h2>
+        <div class="error-message" id="discordError"></div>
+        <input type="text" id="discordMessage" placeholder="Discord Message">
+        <button onclick="discord()">Send Discord Message</button>
+    </div>
+    
+    <!-- wikiScript -->
+    <div class="function-container">
+        <h2>Search Wiki</h2>
+        <div class="error-message" id="wikiScriptError"></div>
+        <input type="text" id="wikiTopic" placeholder="Wiki Topic">
+        <input type="text" id="userName" placeholder="User Name">
+        <button onclick="wikiScript()">Search Wiki</button>
+    </div>
+    
+    <!-- createProjectExecutable -->
+    <div class="function-container">
+        <h2>Create Project Executable</h2>
+        <div class="error-message" id="createProjectExecutableError"></div>
+        <input type="text" id="projectName" placeholder="Project Name">
+        <input type="text" id="fileExtension" placeholder="File Extension">
+        <button onclick="createProjectExecutable()">Create Project Executable</button>
+    </div>
+    
+    
+    <script>
+        async function csvToExcel() {
+            const fileName = document.getElementById('csvFileName').value.trim();
+            const fileInput = document.getElementById('csvFileInput');
+            const errorMessage = document.getElementById('csvToExcelError');
+
+            if (!fileName) {
+                errorMessage.textContent = "Please enter a file name.";
+                return;
+            }        
+
+            if (!fileInput.files[0]) {
+                errorMessage.textContent = "Please select a CSV file.";
+                return;
+            }
+            errorMessage.textContent = "";
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = async function(event) {
+                const csvContent = event.target.result;
+                const requestBody = {
+                    file_name: fileName,
+                    csv_content: btoa(csvContent) // Encoding CSV content to base64
+                };
+                
+                const response = await fetch('https://sjevo5jl5e.execute-api.eu-north-1.amazonaws.com/v1/csv-to-excel', {
+                    method: 'POST',
+                    body: JSON.stringify(requestBody)
+                });
+                
+                const data = await response.json();
+                window.location.href = data.download_link; // Redirect to downloadable link
+            };
+            reader.readAsText(file);
+        }
+        
+
+        function handleFileSelect(event) {
+            const files = event.target.files;
+            const errorMessage = document.getElementById('csvToExcelError');
+
+            if (files.length === 1) {
+                const file = files[0];
+                if (file.name.endsWith('.csv')) {
+                    const fileNameInput = document.getElementById('csvFileName');
+                    fileNameInput.value = file.name.replace('.csv', '');
+                    errorMessage.textContent = "";
+                } else {
+                    errorMessage.textContent = "Please select a CSV file.";
+                }
+        }
+    }
+        
+        
+        async function createUsers() {
+            const googleSheetUrl = document.getElementById('googleSheetUrl').value;
+            const errorMessage = document.getElementById('createUsersError');
+            if (!googleSheetUrl) {
+                errorMessage.textContent = "Please provide a Google Sheet URL.";
+                return;
+            }
+            errorMessage.textContent = "";           
+            const requestBody = {
+                google_sheet_url: googleSheetUrl
+            };
+            
+            const response = await fetch('https://sjevo5jl5e.execute-api.eu-north-1.amazonaws.com/v1/create-user', {
+                method: 'POST',
+                body: JSON.stringify(requestBody)
+            });
+            
+            const data = await response.json();
+            console.log(data); // Handle response as needed
+        }
+        
+        async function discord() {
+            const message = document.getElementById('discordMessage').value;
+            const errorMessage = document.getElementById('discordError');
+            if (!message) {
+                errorMessage.textContent = "Please enter a Discord message.";
+                return;
+            }
+            errorMessage.textContent = "";            
+            const requestBody = {
+                message: message
+            };
+            
+            const response = await fetch('https://sjevo5jl5e.execute-api.eu-north-1.amazonaws.com/v1/discord', {
+                method: 'POST',
+                body: JSON.stringify(requestBody)
+            });
+            
+            const data = await response.json();
+            console.log(data); // Handle response as needed
+        }
+        
+        async function wikiScript() {
+            const topic = document.getElementById('wikiTopic').value;
+            const userName = document.getElementById('userName').value;
+            const errorMessage = document.getElementById('wikiScriptError');
+            if (!topic || !userName) {
+                errorMessage.textContent = "Please provide both topic and user name.";
+                return;
+            }
+            errorMessage.textContent = "";
+            const requestBody = {
+                topic: topic,
+                user_name: userName
+            };
+            
+            const response = await fetch('https://sjevo5jl5e.execute-api.eu-north-1.amazonaws.com/v1/get-wiki-info', {
+                method: 'POST',
+                body: JSON.stringify(requestBody)
+            });
+            
+            const data = await response.json();
+            console.log(data); // Handle response as needed
+        }
+        
+        async function createProjectExecutable() {
+            const projectName = document.getElementById('projectName').value;
+            const fileExtension = document.getElementById('fileExtension').value;
+            const errorMessage = document.getElementById('createProjectExecutableError');
+            if (!projectName || !fileExtension) {
+                errorMessage.textContent = "Please provide both project name and file extension.";
+                return;
+            }
+            errorMessage.textContent = "";
+            const requestBody = {
+                project_name: projectName,
+                file_extension: fileExtension
+            };
+            
+            const response = await fetch('https://sjevo5jl5e.execute-api.eu-north-1.amazonaws.com/v1/create-project', {
+                method: 'POST',
+                body: JSON.stringify(requestBody)
+            });
+            
+            const data = await response.json();
+            window.location.href = data.download_link; // Redirect to downloadable link
+        }
+    </script>
+</body>
+</html>
